@@ -465,6 +465,7 @@ for key in list(finalData_dict['tableData'].keys())[0:4]:
     dataFrames.append(pd.DataFrame(finalData_dict['tableData'][key], index=[
                       finalData_dict['tableData'][key]['header']]))
 list(dataFrames[0].columns)[0:10]
+list(dataFrames[1].columns)[0:10]
 # Experiment with column names
 matches = []
 for index, name in enumerate(varNames):
