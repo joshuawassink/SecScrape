@@ -456,32 +456,3 @@ scrapeSec(
     failure_dict=failure_dict,
     reports=['consolidated balance sheets']
 )
-
-pd.DataFrame.from_dict(finalData_dict['tableData'], orient='index')
-
-# Use Pandas to transform rows into dataframes
-dataFrames = []
-for key in list(finalData_dict['tableData'].keys())[0:4]:
-    dataFrames.append(pd.DataFrame(finalData_dict['tableData'][key], index=[
-                      finalData_dict['tableData'][key]['header']]))
-list(dataFrames[0].columns)[0:10]
-list(dataFrames[1].columns)[0:10]
-# Experiment with column names
-matches = []
-for index, name in enumerate(varNames):
-    varNames = list(dataFrames[0].columns)
-    possible_matches = varNames
-    del possible_matches[index]
-    matches.append(process.extract(varNames[0], possible_matches, limit=len(dataFrames[0].shape)))
-
-# Loop over dataframes to find potential matches in column names
-for varname in
-
-# Datacamp approach
-for state in categories['state']:
-    # Find potential matches in states with typos
-    matches = process.extract(state, survey['state'], limit=survey.shape[0])
-    for potential_match in matches:
-        # If high similarity score
-        if potential_match[1] >= 80:
-            survey.loc[survey['state'] == potential_match[0], 'state'] = state
