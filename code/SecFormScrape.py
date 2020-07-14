@@ -411,7 +411,7 @@ def scrapeSec(start_year, end_year, formType, finalData_dict, failure_dict, repo
     # Generate a new list for the desired form type
     filtered_list = []
     # Use a list comprehension to filter master reports and select info for 10-Ks
-    printText('Filtering document dictionary')
+    printText('Filtering document dictionary to extract {} forms'.format(formType))
     [getDocByType(document_dict, '10-K', filtered_list) for document_dict in master_reports]
     finalData_dict['filtered_list'] = filtered_list
     """Parse the 10K file summaries"""
