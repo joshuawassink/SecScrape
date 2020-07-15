@@ -449,44 +449,70 @@ def scrapeSec(start_year, end_year, formType, finalData_dict, failure_dict, repo
 
 
 scrapeSec(
-    start_year=2020,
+    start_year=2018,
     end_year=2020,
     formType='10-K',
     finalData_dict=finalData_dict,
     failure_dict=failure_dict,
-    reports=['consolidated balance sheets']
+    reports=['Consolidated Statements of Operations']
 )
+finalData_dict['tableData']
+
 
 pd.DataFrame.from_dict(finalData_dict['tableData'], orient='index')
-
+dataFrames
 """Use Pandas to transform rows into dataframes"""
 # Create an empty list to store table-specific dataframes
 dataFrames = []
 # Loop over the dictionary keys
-for key in list(finalData_dict['tableData'].keys())[0:4]:
+for key in list(finalData_dict['tableData'].keys())[0:20]:
     # Transform each data dictionary into a pandas dataframe and append it to dataFrames
     dataFrames.append(pd.DataFrame(finalData_dict['tableData'][key], index=[
                       finalData_dict['tableData'][key]['header']]))
 
-"""Create lists for column names"""
-names = []
-[names.append(list(data.columns)) for data in dataFrames]
-n1 = list(dataFrames[0].columns)[0:10]
-n2 = list(dataFrames[1].columns)[0:10]
-
-fuzz.ratio(names[0][6], names[3][6])
 
 """Function to create consistent naming"""
+
+
+def fuzzyMerge(dataframes):
+    names = list(dataframes[0].columns)
+    # Loop over each dataframe in the list except the first one
+    for index, dataframe in enumerate(dataframes):
+        # loop over variables in the dataframe
+        for variable in dataframe.columns:
+            # Find potential matches
+            match = process.extractOne(variable, names)
+            # If it is a high quality match
+            if match[1] >= 70:
+                # Replace the current variable name with the new variable name
+                dataframes[index] = dataframe.rename(columns={variable: match[0]})
+            else:
+                names.append(variable)
+    return dataframes
+
+
+new_data = fuzzyMerge(dataFrames)
+for pd.concat(dataFrames[:17]).columns
+
+
+# Scratch paper
 names = list(dataFrames[0].columns)
+df = dataFrames[0]
+names = list(dataFrames[0].columns)
+df.columns
 # Loop over each dataframe in the list except the first one
-for index, dataframe in enumerate(dataFrames[1:]):
+for index, dataframe in enumerate(dataFrames[2:3]):
     # loop over variables in the dataframe
     for variable in dataframe.columns:
         # Find potential matches
         match = process.extractOne(variable, names)
         # If it is a high quality match
-        if match[1] >= 80:
+        print(match)
+dataFrames[3].filter(regex=('assets'))
+
+"""        if match[1] >= 70:
             # Replace the current variable name with the new variable name
-            dataFrames[index] = dataframe.rename(columns={variable: match[0]})
+            dataframes[index] = dataframe.rename(columns={variable: match[0]})
         else:
             names.append(variable)
+"""
