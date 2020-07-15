@@ -459,8 +459,6 @@ scrapeSec(
 finalData_dict['tableData']
 
 
-pd.DataFrame.from_dict(finalData_dict['tableData'], orient='index')
-dataFrames
 """Use Pandas to transform rows into dataframes"""
 # Create an empty list to store table-specific dataframes
 dataFrames = []
@@ -470,7 +468,7 @@ for key in list(finalData_dict['tableData'].keys())[0:20]:
     dataFrames.append(pd.DataFrame(finalData_dict['tableData'][key], index=[
                       finalData_dict['tableData'][key]['header']]))
 
-
+pd.concat(dataFrames).dropna(how='any', axis=1)
 """Function to create consistent naming"""
 
 
@@ -483,16 +481,18 @@ def fuzzyMerge(dataframes):
             # Find potential matches
             match = process.extractOne(variable, names)
             # If it is a high quality match
-            if match[1] >= 70:
+            if match[1] >= 80:
+                print(variable, match)
                 # Replace the current variable name with the new variable name
                 dataframes[index] = dataframe.rename(columns={variable: match[0]})
             else:
                 names.append(variable)
-    return dataframes
 
+    # return dataframes
+fuzzyMerge(dataFrames[1:3])
 
 new_data = fuzzyMerge(dataFrames)
-for pd.concat(dataFrames[:17]).columns
+pd.concat(new_data).dropna(how='any', axis=1)
 
 
 # Scratch paper
@@ -516,3 +516,18 @@ dataFrames[3].filter(regex=('assets'))
         else:
             names.append(variable)
 """
+
+
+l1 = list(dataFrames[0].columns)
+l2 = list(dataFrames[4].columns)
+
+for variable in l2:
+    # Find potential matches
+    match = process.extractOne(variable, l1)
+    # If it is a high quality match
+    if match[1] >= 90:
+        print(variable)
+        print(match)
+
+l1[7]
+process.extractOne(l1[6], l2)
