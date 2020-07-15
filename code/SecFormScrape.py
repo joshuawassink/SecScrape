@@ -270,7 +270,7 @@ def statementUrls(fileSummary, report_list, data_dict):
             if len(item.findall(report_dict['name_short'])) > 0:
                 # append the url to the statement urls list
                 statementUrls_list.append(report_dict['url'])
-    #statementUrls_list = statementUrls_list[:-1]
+    # statementUrls_list = statementUrls_list[:-1]
     # Finally, for each statement url
     for statement in statementUrls_list:
         # Get the data from the table url
@@ -333,7 +333,7 @@ def tableScrape(url_table, companyInfo_list, data_dict):
     CIK = companyInfo_list[1]
     year = companyInfo_list[2]
     header[0] = [head+'_' + year + '_' + CIK for head in header[0]]
-    #header = [head+'_' +companyInfo_list[1] for head in header]
+    # header = [head+'_' +companyInfo_list[1] for head in header]
     # Assign the data to a list
     data = url_table['data']
     try:
@@ -364,63 +364,68 @@ def tableScrape(url_table, companyInfo_list, data_dict):
         finalData_dict['failedScrapes_list'].append(companyInfo_list[0])
 
 
-"""
-Define master funcction to extract data from SEC forms
-start_year: The first year (YYYY) from which you would like to  extract data
-end_year:   The last inclusive year (YYYY) from which you would like to  extract data
-formType: The type of form you would like to extract (e.g., 10-K)
-finalData_dict:a dictionary to store the extracted data
-failure_dict: a dictionary to record failed extractions
-reports: the types of tables within the form that you would like to scrape
-"""
-
-
 def scrapeSec(start_year, end_year, formType, finalData_dict, failure_dict, reports):
-    # Create a dictionary to hold the index file urls
-    DailyIndex_dict = {}
-    # Execute getDailyIndex for desired period
-    printText('Building daily index from {} to {}'.format(start_year, end_year))
-    getDailyIndex(start_year, end_year, DailyIndex_dict, 'master')
-    # Store the filing urls
-    finalData_dict['index_urls'] = DailyIndex_dict
-    """Parse all index files to extract data storage info"""
-    # Empty list to store index information
-    master_data = []
-    # Empty list to hold .txt files that were unsuccessfully decodes
-    failed_decodes = []
-    # Empty list to store file headers
-    master_headers = []
-    # Create a list of already downloaded files to prevent duplication
-    downloaded_data = os.listdir(path)
-    # Iterate parseIndex over all of the urls in finalData_dict['index_urls']
-    printText('Parsing index files')
-    [parseIndex(url, filename, master_data, master_headers, failed_decodes, downloaded_data)
-     for url, filename in finalData_dict['index_urls'].items()]
-    # Store failed decodes in the failure dictionary
-    failure_dict['failed_decodes'] = failed_decodes
-    # Report performance
-    printText('{} ({:.2f}%) out of {} index files successfully parsed'.format(len(master_data), len(
-        master_data)/(len(master_data)+len(failed_decodes))*100, len(master_data)+len(failed_decodes)))
-    """Create a Document Dictionary to itemize each individual report"""
-    printText('Creating document dictionary')
-    # First, initialize a master list to hold the document inventories
-    master_reports = []
-    """Then, loop through each index to extract a document dictionary for every report filed."""
-    indexExtract(master_data, master_headers, master_reports)
-    """Create a filtered list containing the desired form type"""
-    # Generate a new list for the desired form type
-    filtered_list = []
-    # Use a list comprehension to filter master reports and select info for 10-Ks
-    printText('Filtering document dictionary to extract {} forms'.format(formType))
-    [getDocByType(document_dict, '10-K', filtered_list) for document_dict in master_reports]
-    finalData_dict['filtered_list'] = filtered_list
-    """Parse the 10K file summaries"""
-    # Create empty lists to store summary output & failed extractions
-    fileSummary_list = []
-    noSummary_list = []
-    # Iterate over the files to extract the filing sumarry urls
-    printText('Getting file summary urls from SEC.gov. This may take a while')
-    with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
+
+
+"""Extract data from tables in SEC forms
+
+Args:
+    start_year (int): The first year (YYYY) from which you would like to  extract data
+    end_year (int):   The last inclusive year (YYYY) from which you would like to  extract data
+    formType (str): The type of form you would like to extract (e.g., 10-K)
+    finalData_dict (dictionary object): a dictionary to store the extracted data
+    failure_dict (dictionary object): a dictionary to record failed extractions
+    reports (list of strings): the types of tables within the form that you would like to scrape
+
+Returns:
+    data from the scraped tables stored in finalData_dict
+    urls and index files that could not be scraped stored in failure_dict
+"""
+# Create a dictionary to hold the index file urls
+DailyIndex_dict = {}
+# Execute getDailyIndex for desired period
+printText('Building daily index from {} to {}'.format(start_year, end_year))
+getDailyIndex(start_year, end_year, DailyIndex_dict, 'master')
+# Store the filing urls
+finalData_dict['index_urls'] = DailyIndex_dict
+"""Parse all index files to extract data storage info"""
+# Empty list to store index information
+master_data = []
+# Empty list to hold .txt files that were unsuccessfully decodes
+failed_decodes = []
+# Empty list to store file headers
+master_headers = []
+# Create a list of already downloaded files to prevent duplication
+downloaded_data = os.listdir(path)
+# Iterate parseIndex over all of the urls in finalData_dict['index_urls']
+printText('Parsing index files')
+[parseIndex(url, filename, master_data, master_headers, failed_decodes, downloaded_data)
+ for url, filename in finalData_dict['index_urls'].items()]
+# Store failed decodes in the failure dictionary
+failure_dict['failed_decodes'] = failed_decodes
+# Report performance
+printText('{} ({:.2f}%) out of {} index files successfully parsed'.format(len(master_data), len(
+    master_data)/(len(master_data)+len(failed_decodes))*100, len(master_data)+len(failed_decodes)))
+"""Create a Document Dictionary to itemize each individual report"""
+printText('Creating document dictionary')
+# First, initialize a master list to hold the document inventories
+master_reports = []
+"""Then, loop through each index to extract a document dictionary for every report filed."""
+indexExtract(master_data, master_headers, master_reports)
+"""Create a filtered list containing the desired form type"""
+# Generate a new list for the desired form type
+filtered_list = []
+# Use a list comprehension to filter master reports and select info for 10-Ks
+printText('Filtering document dictionary to extract {} forms'.format(formType))
+[getDocByType(document_dict, '10-K', filtered_list) for document_dict in master_reports]
+finalData_dict['filtered_list'] = filtered_list
+"""Parse the 10K file summaries"""
+# Create empty lists to store summary output & failed extractions
+fileSummary_list = []
+ noSummary_list = []
+  # Iterate over the files to extract the filing sumarry urls
+  printText('Getting file summary urls from SEC.gov. This may take a while')
+   with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
         [executor.submit(processForm(document_dict, fileSummary_list, noSummary_list))
          for document_dict in finalData_dict['filtered_list'][:20]]
     printText('{} ({:.2f}%) out of {} index files successfully parsed'.format(len(fileSummary_list), len(
