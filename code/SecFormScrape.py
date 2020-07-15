@@ -459,11 +459,16 @@ scrapeSec(
 
 pd.DataFrame.from_dict(finalData_dict['tableData'], orient='index')
 
-# Use Pandas to transform rows into dataframes
+"""Use Pandas to transform rows into dataframes"""
+# Create an empty list to store table-specific dataframes
 dataFrames = []
+# Loop over the dictionary keys
 for key in list(finalData_dict['tableData'].keys())[0:4]:
+    # Transform each data dictionary into a pandas dataframe and append it to dataFrames
     dataFrames.append(pd.DataFrame(finalData_dict['tableData'][key], index=[
                       finalData_dict['tableData'][key]['header']]))
+
+
 list(dataFrames[0].columns)[0:10]
 list(dataFrames[1].columns)[0:10]
 # Experiment with column names
