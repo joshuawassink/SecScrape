@@ -270,7 +270,7 @@ def statementUrls(fileSummary, report_list, data_dict):
             if len(item.findall(report_dict['name_short'])) > 0:
                 # append the url to the statement urls list
                 statementUrls_list.append(report_dict['url'])
-    statementUrls_list = statementUrls_list[:-1]
+    #statementUrls_list = statementUrls_list[:-1]
     # Finally, for each statement url
     for statement in statementUrls_list:
         # Get the data from the table url
@@ -449,7 +449,7 @@ def scrapeSec(start_year, end_year, formType, finalData_dict, failure_dict, repo
 
 
 scrapeSec(
-    start_year=2018,
+    start_year=2019,
     end_year=2020,
     formType='10-K',
     finalData_dict=finalData_dict,
