@@ -256,6 +256,17 @@ def parseFileSummary(url, output_list):
 
 
 def statementUrls(fileSummary, report_list, data_dict):
+    """Wrapper function to extract data from SEC forms
+
+    Args:
+        fileSummary (list): index of tables contained in each filing
+        report_list (list): list of tables to scrape
+        data_dict (dict): dictionary to store the final data
+
+    Returns:
+        a data dictionary containing table column headers, section headers, and row values.
+    """
+    # define a dictionary that will store the different parts of the statement.
     data_dict = data_dict
     # define the statements we want to look for.
     # Create a list to hold the table urls
@@ -279,10 +290,15 @@ def statementUrls(fileSummary, report_list, data_dict):
         tableScrape(statement_data, companyInfo_list, data_dict)
 
 
-"""Extract the statement data from an xml table"""
-
-
 def statementData(statement):
+    """Extract raw header and row data from forms filed with the SEC
+
+    Args:
+        statement (string): url for an SEC form
+
+    Returns:
+        a data dictionary containing table column headers, section headers, and row values.
+    """
     # define a dictionary that will store the different parts of the statement.
     statement_data = {}
     statement_data['headers'] = []
@@ -312,10 +328,17 @@ def statementData(statement):
     return statement_data
 
 
-"""Store the extracted data in nested dictionaries of columns:lists and then rowNames:values"""
-
-
 def tableScrape(url_table, companyInfo_list, data_dict):
+    """Extract data from scraped tables
+
+    Args:
+        url_table (dict): Data dictionary constructed by statementData and passed to tableScrape in statementUrls
+        companyInfo_list (list): Identifying characteristics of each company to include with its extracted data
+        data_dict (dict): Data dictionary to store varName:varValue key:value pairs
+
+    Returns:
+        data from the scraped tables stored in finalData_dict
+    """
     companyInfo_list = companyInfo_list
     data_dict = data_dict
     # Define a regular expression to extract non-decimal values
@@ -365,67 +388,65 @@ def tableScrape(url_table, companyInfo_list, data_dict):
 
 
 def scrapeSec(start_year, end_year, formType, finalData_dict, failure_dict, reports):
+    """Extract data from tables in SEC forms
 
+    Args:
+        start_year (int): The first year (YYYY) from which you would like to  extract data
+        end_year (int):   The last inclusive year (YYYY) from which you would like to  extract data
+        formType (str): The type of form you would like to extract (e.g., 10-K)
+        finalData_dict (dictionary object): a dictionary to store the extracted data
+        failure_dict (dictionary object): a dictionary to record failed extractions
+        reports (list of strings): the types of tables within the form that you would like to scrape
 
-"""Extract data from tables in SEC forms
-
-Args:
-    start_year (int): The first year (YYYY) from which you would like to  extract data
-    end_year (int):   The last inclusive year (YYYY) from which you would like to  extract data
-    formType (str): The type of form you would like to extract (e.g., 10-K)
-    finalData_dict (dictionary object): a dictionary to store the extracted data
-    failure_dict (dictionary object): a dictionary to record failed extractions
-    reports (list of strings): the types of tables within the form that you would like to scrape
-
-Returns:
-    data from the scraped tables stored in finalData_dict
-    urls and index files that could not be scraped stored in failure_dict
-"""
-# Create a dictionary to hold the index file urls
-DailyIndex_dict = {}
-# Execute getDailyIndex for desired period
-printText('Building daily index from {} to {}'.format(start_year, end_year))
-getDailyIndex(start_year, end_year, DailyIndex_dict, 'master')
-# Store the filing urls
-finalData_dict['index_urls'] = DailyIndex_dict
-"""Parse all index files to extract data storage info"""
-# Empty list to store index information
-master_data = []
-# Empty list to hold .txt files that were unsuccessfully decodes
-failed_decodes = []
-# Empty list to store file headers
-master_headers = []
-# Create a list of already downloaded files to prevent duplication
-downloaded_data = os.listdir(path)
-# Iterate parseIndex over all of the urls in finalData_dict['index_urls']
-printText('Parsing index files')
-[parseIndex(url, filename, master_data, master_headers, failed_decodes, downloaded_data)
- for url, filename in finalData_dict['index_urls'].items()]
-# Store failed decodes in the failure dictionary
-failure_dict['failed_decodes'] = failed_decodes
-# Report performance
-printText('{} ({:.2f}%) out of {} index files successfully parsed'.format(len(master_data), len(
-    master_data)/(len(master_data)+len(failed_decodes))*100, len(master_data)+len(failed_decodes)))
-"""Create a Document Dictionary to itemize each individual report"""
-printText('Creating document dictionary')
-# First, initialize a master list to hold the document inventories
-master_reports = []
-"""Then, loop through each index to extract a document dictionary for every report filed."""
-indexExtract(master_data, master_headers, master_reports)
-"""Create a filtered list containing the desired form type"""
-# Generate a new list for the desired form type
-filtered_list = []
-# Use a list comprehension to filter master reports and select info for 10-Ks
-printText('Filtering document dictionary to extract {} forms'.format(formType))
-[getDocByType(document_dict, '10-K', filtered_list) for document_dict in master_reports]
-finalData_dict['filtered_list'] = filtered_list
-"""Parse the 10K file summaries"""
-# Create empty lists to store summary output & failed extractions
-fileSummary_list = []
- noSummary_list = []
-  # Iterate over the files to extract the filing sumarry urls
-  printText('Getting file summary urls from SEC.gov. This may take a while')
-   with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
+    Returns:
+        data from the scraped tables stored in finalData_dict
+        urls and index files that could not be scraped stored in failure_dict
+    """
+    # Create a dictionary to hold the index file urls
+    DailyIndex_dict = {}
+    # Execute getDailyIndex for desired period
+    printText('Building daily index from {} to {}'.format(start_year, end_year))
+    getDailyIndex(start_year, end_year, DailyIndex_dict, 'master')
+    # Store the filing urls
+    finalData_dict['index_urls'] = DailyIndex_dict
+    """Parse all index files to extract data storage info"""
+    # Empty list to store index information
+    master_data = []
+    # Empty list to hold .txt files that were unsuccessfully decodes
+    failed_decodes = []
+    # Empty list to store file headers
+    master_headers = []
+    # Create a list of already downloaded files to prevent duplication
+    downloaded_data = os.listdir(path)
+    # Iterate parseIndex over all of the urls in finalData_dict['index_urls']
+    printText('Parsing index files')
+    [parseIndex(url, filename, master_data, master_headers, failed_decodes, downloaded_data)
+     for url, filename in finalData_dict['index_urls'].items()]
+    # Store failed decodes in the failure dictionary
+    failure_dict['failed_decodes'] = failed_decodes
+    # Report performance
+    printText('{} ({:.2f}%) out of {} index files successfully parsed'.format(len(master_data), len(
+        master_data)/(len(master_data)+len(failed_decodes))*100, len(master_data)+len(failed_decodes)))
+    """Create a Document Dictionary to itemize each individual report"""
+    printText('Creating document dictionary')
+    # First, initialize a master list to hold the document inventories
+    master_reports = []
+    """Then, loop through each index to extract a document dictionary for every report filed."""
+    indexExtract(master_data, master_headers, master_reports)
+    """Create a filtered list containing the desired form type"""
+    # Generate a new list for the desired form type
+    filtered_list = []
+    # Use a list comprehension to filter master reports and select info for 10-Ks
+    printText('Filtering document dictionary to extract {} forms'.format(formType))
+    [getDocByType(document_dict, '10-K', filtered_list) for document_dict in master_reports]
+    finalData_dict['filtered_list'] = filtered_list
+    """Parse the 10K file summaries"""
+    # Create empty lists to store summary output & failed extractions
+    fileSummary_list = []
+    noSummary_list = []
+    # Iterate over the files to extract the filing sumarry urls
+    printText('Getting file summary urls from SEC.gov. This may take a while')
+    with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
         [executor.submit(processForm(document_dict, fileSummary_list, noSummary_list))
          for document_dict in finalData_dict['filtered_list'][:20]]
     printText('{} ({:.2f}%) out of {} index files successfully parsed'.format(len(fileSummary_list), len(
@@ -452,6 +473,8 @@ fileSummary_list = []
     [statementUrls(summary, report_list, data_dict) for summary in fileSummaryInfo]
     finalData_dict['tableData'] = data_dict
 
+
+print(scrapeSec.__doc__)
 
 scrapeSec(
     start_year=2019,
