@@ -21,10 +21,17 @@ failure_dict = {}
 finalData_dict['dataSet_list'] = []
 finalData_dict['failedScrapes_list'] = []
 
-"""Defining a URL Builder"""
-
 
 def make_url(base_url, comp):
+    """Construct URL
+
+    Args:
+        base_url (str): initial url (e.g., wikipedia.org)
+        comp (list): list of additions to base_url
+
+    Returns:
+        Concatenated URL
+    """
     url = base_url
     # add each component to the base url
     for r in comp:
@@ -32,35 +39,49 @@ def make_url(base_url, comp):
     return url
 
 
-"""Define a heading generator"""
-
-
 def printText(text):
+    """Print formatted notes
+
+    Args:
+        text (str): a text string
+
+    Returns:
+        Formatted printout of text
+    """
     print('-'*100)
     print(text)
     print('-'*100)
 
 
-"""Defining a title builder to title downloaded files"""
-
-
 def make_title(string, path=path, ext='txt'):
+    """Format filenames for downloads
+
+    Args:
+        string (str): current filename
+        path (str): path to local directory for storage (default=path)
+        ext (str): file extension (default = 'txt')
+
+    Returns:
+        formatted file name for local download
+    """
     filename = string.rpartition('/')[2]
     filename = filename.rpartition('.')
     filename = filename[0].replace('.', '_')+filename[1]+ext
     return filename
 
 
-"""Pulling the daily index filings"""
-# This code creats a dictionary of key value pairs in which the key is the url for an SEC daily index and the value is the corresponding file name that can be used to save the daily index locally
-# define the urls needed to make the request, let's start with all the daily filings
-
-
 def getDailyIndex(start_year, end_year, output_dict, filetype='sec'):
-    """start: the first year of interest
-        end: the last year of interest (inclusive)
-        filetype: the type of file to filter for (default is all)
-        output_dict: the repository for urls and filenames (this must be created before execution)"""
+    """Get urls for daily index filings
+
+    Args:
+        start_year (int): year to begin scraping index (inclusive)
+        end_year (int): year to stop scraping index (inclusive)
+        output_dict (dict): dictionary to store index urls and filenames
+        filetype (str): type of file to scrape (default='sec')
+
+    Returns:
+         dictionary urls for SEC daily indices: index file names
+    """
     base_url = r"https://www.sec.gov/Archives/edgar/daily-index"
     # The daily-index filings, require a year and content type (html, json, or xml).
     start_year = start_year
@@ -91,16 +112,20 @@ def getDailyIndex(start_year, end_year, output_dict, filetype='sec'):
                     output_dict[file_url] = filename
 
 
-"""Parsing the master IDX file"""
-
-
 def parseIndex(url, filename, output_list, header_list, failure_list, downloaded_data, download=True):
-    # This function parses the master index file to extract form-specific URLs
-    # url refers to the form url obtained by the index
-    # file name is the name of the file
-    # output_list defines the list to store the urls contained in the file
-    # header_list refers to a list that will store header info from each file
-    # failure_list refers to files that could not be successfully decoded
+    """Parse the master index file
+
+    Args:
+        url (string): URL to daily index
+        filename (string): reformatted file name for .txt index file
+        output_list (list): list to store indivual file urls
+        header_list (list): list to store index header information
+        failure_list (list): list to store files that could not be read
+        downloaded_data (list): list of already downloaded files
+
+    Returns:
+        list of file urls, list of index headers, and list of unreadable index files
+    """
     downloaded_data = downloaded_data
     file_url = url
     filename = filename
@@ -155,11 +180,17 @@ def parseIndex(url, filename, output_list, header_list, failure_list, downloaded
         failure_list.append(filename)
 
 
-"""Creating a Document Dictionary"""
-
-
 def indexExtract(master_data, master_headers, master_reports):
-    """Then, loop through each document in the master list."""
+    """Create a document dictionary
+
+    Args:
+        master_data (list): List to store index information
+        master_headers (list): List to store file headers
+        master_reports (dict): List to store document inventories
+
+    Returns:
+        document dictionaries for every report listed in the SEC indexes
+    """
     # First enumerating the list of document lists
     for index1, document in enumerate(master_data):
         # Next, enumerate each document list
@@ -180,23 +211,37 @@ def indexExtract(master_data, master_headers, master_reports):
         len(master_reports), (len(master_reports)/length)*100, length))
 
 
-"""Define a function to filter document_dicts by form Type and return urls and company names"""
-
-
 def getDocByType(document_dict, formType, filtered_dict):
-    # First, filter the document dictionaries by form type
+    """Filter document_dicts by form Type
+
+    Args:
+        document_dict (dict): dictionary containing form information and urls for desired forms
+        formType (list): list of forms to scrape (e.g., 10-K)
+        filtered_dict (dict): data dict to store filtered list of company filings
+
+    Returns:
+        Filtered list containing specified forms
+    """
+    # Filter the document dictionaries by form type
     if document_dict['Form Type'] == formType:
+        # Add the document url to document_dict
         document_dict['documents_url'] = document_dict['File Name'].replace(
             '-', '').replace('.txt', '/index.json')
+        # Store the document dict in filtered dict
         filtered_dict.append(document_dict)
 
 
-"""Function to process the 10-K form"""
-# This function will request the index in .json format and then extract the filing summary if one is available
-
-
 def processForm(document_dict, fileSummary_list, noSummary_list):
-    # If the form has a filing summary, this function will append the url to call the filing summary to the output list. Otherwise, it will append the form url to the failure list
+    """parse SEC form
+
+    Args:
+        document_dict (dict): dictionary containing urls for desired forms
+        fileSummary_list (list): list of tables contained in each filing
+        noSummary_list (list): list of files without indexes
+
+    Returns:
+        File urls and file summaries
+    """
     url = document_dict['documents_url']
     content = requests.get(url).json()
     length = len(fileSummary_list)
@@ -211,10 +256,16 @@ def processForm(document_dict, fileSummary_list, noSummary_list):
                                document_dict['CIK'], document_dict['Date Filed'][:4]])
 
 
-"""Define a function to parse the file summaries and extract the specific file names"""
-
-
 def parseFileSummary(url, output_list):
+    """parse the file summaries and extract desired table urls
+
+    Args:
+        url (string): url to an SEC filing
+        output_list (list): list to store extracted data
+
+    Returns:
+        List of desired table urls
+    """
     # First, define a base url to use when downloading the reports
     base_url = url[0].replace('FilingSummary.xml', '')
     # Next, request and parse the content
@@ -256,7 +307,8 @@ def parseFileSummary(url, output_list):
 
 
 def statementUrls(fileSummary, report_list, data_dict):
-    """Wrapper function to extract data from SEC forms
+    """Wrapper function to extract data from SEC forms.
+        statementUrls calls statementData and tableScrape
 
     Args:
         fileSummary (list): index of tables contained in each filing
@@ -515,6 +567,7 @@ def fuzzyMerge(dataframes):
                 dataframes[index] = dataframe.rename(columns={variable: match[0]})
             else:
                 names.append(variable)
+
 
     # return dataframes
 fuzzyMerge(dataFrames[1:3])
